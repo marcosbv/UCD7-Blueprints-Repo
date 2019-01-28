@@ -1,0 +1,11 @@
+heat_template_version: 2013-05-23
+
+description: >
+  Created 1/28/19 by ucdpadmin.
+
+
+outputs:
+  blueprint_url:
+    description: Blueprint Origin URL
+    value:  https://marcosbv-ubuntu-server:8445/landscaper/view/projects?open=ucdpadmin_00000000_0000_0000_0000_000000000002-OrionContent/Blueprints/Aplicacao1/Aplicacao1-blueprint.yaml.yml
+

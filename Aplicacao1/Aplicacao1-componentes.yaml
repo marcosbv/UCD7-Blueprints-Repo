@@ -29,26 +29,32 @@ parameters:
   environment_name:
     type: string
     description: 'Generated'
-  ansible-playbooks_export:
+  component2-app1_export:
+    type: string
+    description: 'Generated to access component from imported blueprint'
+  component3-app1_export:
+    type: string
+    description: 'Generated to access component from imported blueprint'
+  componente1-app1_export:
     type: string
     description: 'Generated to access component from imported blueprint'
 parameter_groups:
-    - { label: 'Agent Parameters', parameters: [ansible-playbooks_export, application_name, environment_name, ucd_password, ucd_proxy_port, ucd_relay_url, ucd_server_url, ucd_user] }
+    - { label: 'Agent Parameters', parameters: [application_name, component2-app1_export, component3-app1_export, componente1-app1_export, environment_name, ucd_password, ucd_proxy_port, ucd_relay_url, ucd_server_url, ucd_user] }
 resources:
-## APPLICATION { "AppTeste" : { "baseResource" : "", "teamMappings" : "" } }
-  ansible-playbooks:
+  component2-app1:
+    depends_on: [component3-app1, componente1-app1]
     type: IBM::UrbanCode::SoftwareDeploy::UCD
     properties:
-      apply_config: { get_resource: ansible-playbooks_sw_config }
-      server: { get_param: ansible-playbooks_export }
+      apply_config: { get_resource: component2-app1_sw_config }
+      server: { get_param: component2-app1_export }
       version: LATEST
       agent_timeout: "360"
 
-  ansible-playbooks_sw_config:
+  component2-app1_sw_config:
     type: IBM::UrbanCode::SoftwareConfig::UCD
     properties: 
-      name: "ansible-playbooks"
-      component_process: "Run Process"
+      name: "component2-app1"
+      component_process: "deploy"
       component_process_timeout: "300"
       ucd_server_url: { get_param: ucd_server_url } # these should come from resource_tree
       ucd_username: { get_param: ucd_user }
@@ -58,7 +64,51 @@ resources:
       application: { get_param: application_name }
       environment_name: { get_param: environment_name }
 
+  component3-app1:
+    type: IBM::UrbanCode::SoftwareDeploy::UCD
+    properties:
+      apply_config: { get_resource: component3-app1_sw_config }
+      server: { get_param: component3-app1_export }
+      version: LATEST
+      agent_timeout: "360"
 
+  component3-app1_sw_config:
+    type: IBM::UrbanCode::SoftwareConfig::UCD
+    properties: 
+      name: "component3-app1"
+      component_process: "Deploy"
+      component_process_timeout: "300"
+      ucd_server_url: { get_param: ucd_server_url } # these should come from resource_tree
+      ucd_username: { get_param: ucd_user }
+      ucd_password: { get_param: ucd_password }
+      ucd_relay_url: { get_param: ucd_relay_url }
+      ucd_proxy_port: { get_param: ucd_proxy_port }
+      application: { get_param: application_name }
+      environment_name: { get_param: environment_name }
+
+  componente1-app1:
+    type: IBM::UrbanCode::SoftwareDeploy::UCD
+    properties:
+      apply_config: { get_resource: componente1-app1_sw_config }
+      server: { get_param: componente1-app1_export }
+      version: LATEST
+      agent_timeout: "360"
+
+  componente1-app1_sw_config:
+    type: IBM::UrbanCode::SoftwareConfig::UCD
+    properties: 
+      name: "componente1-app1"
+      component_process: "Deploy"
+      component_process_timeout: "300"
+      ucd_server_url: { get_param: ucd_server_url } # these should come from resource_tree
+      ucd_username: { get_param: ucd_user }
+      ucd_password: { get_param: ucd_password }
+      ucd_relay_url: { get_param: ucd_relay_url }
+      ucd_proxy_port: { get_param: ucd_proxy_port }
+      application: { get_param: application_name }
+      environment_name: { get_param: environment_name }
+
+## APPLICATION { "app1" : { "baseResource" : "", "teamMappings" : "" } }
 outputs:
   blueprint_url:
     description: Blueprint Origin URL

@@ -4,6 +4,23 @@ description: >
   Created 1/28/19 by ucdpadmin.
 
 parameters:
+  referenced-image-name:
+    type: string
+    description: 'Generated'
+    label: Referenced Image Name
+    default: 'Referenced Image'
+  referenced-image-id:
+    type: string
+    description: 'Generated'
+  flavor:
+    type: string
+    description: 'Flavor to be used for compute instance'
+  key_name:
+    type: string
+    description: 'For most clouds, the name of the key-pair to be used for the compute instance; for VMware clouds, the contents of the public SSH key for the compute instance'
+  availability_zone:
+    type: string
+    description: 'Name of availability zone in which to create the instance'
   Aplicacao1-componentes_in_Blueprints--ucd_proxy_port:
     type: string
     description: 'The UCD proxy port, the default value is 20080'
@@ -24,36 +41,36 @@ parameters:
     type: string
     description: 'The user credential for the UrbanCode Deploy server.'
     default: 'admin'
-  referenced-image-name:
-    type: string
-    description: 'Generated'
-    label: Referenced Image Name
-    default: 'Referenced Image'
-  referenced-image-id:
-    type: string
-    description: 'Generated'
-  flavor:
-    type: string
-    description: 'Flavor to be used for compute instance'
-  key_name:
-    type: string
-    description: 'For most clouds, the name of the key-pair to be used for the compute instance; for VMware clouds, the contents of the public SSH key for the compute instance'
-  availability_zone:
-    type: string
-    description: 'Name of availability zone in which to create the instance'
   ucd_proxy_port:
     type: string
     description: 'The UCD proxy port, the default value is 20080.'
     default: '20080'
+  referenced-image2-name:
+    type: string
+    description: 'Generated'
+    label: Referenced Image 2 Name
+    default: 'Referenced Image 2'
+  referenced-image2-id:
+    type: string
+    description: 'Generated'
+  referenced-network:
+    type: string
+    description: 'Generated for ''referenced-network'''
+    label: Referenced Network
+    default: 'referenced-network'
 parameter_groups:
     - { label: 'Agent Parameters', parameters: [Aplicacao1-componentes_in_Blueprints--ucd_proxy_port, ucd_password, ucd_proxy_port, ucd_relay_url, ucd_server_url, ucd_user] }
-    - { label: 'Image Parameters', parameters: [flavor, key_name, referenced-image-id, referenced-image-name] }
-    - { label: 'Network Parameters', parameters: [availability_zone] }
+    - { label: 'Image Parameters', parameters: [flavor, key_name, referenced-image-id, referenced-image-name, referenced-image2-id, referenced-image2-name] }
+    - { label: 'Network Parameters', parameters: [availability_zone, referenced-network] }
 resources:
+## REFERENCE {"referenced-network":{"type": "OS::Neutron::Net", "properties": {"network_id": "referenced-network"}}}
+
   Aplicacao1-componentes_in_Blueprints:
     type: Aplicacao1-componentes.yaml
     properties:
-      ansible-playbooks_export: { get_resource: referenced-image }
+      component2-app1_export: { get_resource: referenced-image }
+      component3-app1_export: { get_resource: referenced-image2 }
+      componente1-app1_export: { get_resource: referenced-image }
       ucd_proxy_port: { get_param: Aplicacao1-componentes_in_Blueprints--ucd_proxy_port }
       application_name: { get_attr: [ resource_tree, application_name ] }
       environment_name: { get_attr: [ resource_tree, environment_name ] }
@@ -65,6 +82,8 @@ resources:
   referenced-image:
     type: OS::Nova::Server
     properties:
+      networks:
+          - port: { get_resource: referenced-image__to__referenced-network__port  }
       user_data: { get_resource: referenced-image_mime }
       user_data_format: RAW
       name: { get_param: referenced-image-name }
@@ -75,7 +94,41 @@ resources:
       metadata: 
         __os_type__ : "Linux"
 
+  referenced-image__to__referenced-network__port:
+    type: OS::Neutron::Port
+    properties:
+      network_id: { get_param: referenced-network }
+      replacement_policy: AUTO
+
   referenced-image_mime:
+    type: OS::Heat::MultipartMime
+    properties:
+      parts:
+        - config: { get_resource: ucd_agent_install_linux }
+          subtype: "x-shellscript"
+
+  referenced-image2:
+    type: OS::Nova::Server
+    properties:
+      networks:
+          - port: { get_resource: referenced-image2__to__referenced-network__port  }
+      user_data: { get_resource: referenced-image2_mime }
+      user_data_format: RAW
+      name: { get_param: referenced-image2-name }
+      image: { get_param: referenced-image2-id }
+      flavor: { get_param: flavor } 
+      key_name: { get_param: key_name } # Name of key-pair to be used for compute instance
+      availability_zone: { get_param: availability_zone }
+      metadata: 
+        __os_type__ : "Linux"
+
+  referenced-image2__to__referenced-network__port:
+    type: OS::Neutron::Port
+    properties:
+      network_id: { get_param: referenced-network }
+      replacement_policy: AUTO
+
+  referenced-image2_mime:
     type: OS::Heat::MultipartMime
     properties:
       parts:
@@ -92,7 +145,7 @@ resources:
        ucd_relay_url: { get_param: ucd_relay_url }
        ucd_proxy_port: { get_param: ucd_proxy_port }
        team_mappings: 
-       application: AppTeste
+       application: app1
        base_resource_group: 
 
   ucd_agent_install_linux:
