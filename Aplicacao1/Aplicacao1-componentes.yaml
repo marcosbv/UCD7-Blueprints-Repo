@@ -1,0 +1,66 @@
+heat_template_version: 2013-05-23
+
+description: >
+  Created 1/28/19 by ucdpadmin.
+
+parameters:
+  ucd_server_url:
+    type: string
+    description: 'The server URL for agent communication to UrbanCode Deploy. Do *not* add a trailing slash.'
+    default: 'https://marcosbv-ubuntu-server:8443'
+  ucd_user:
+    type: string
+    description: 'The user credential for the UrbanCode Deploy server.'
+    default: 'admin'
+  ucd_password:
+    type: string
+    description: 'The user credential for the UrbanCode Deploy server.'
+    hidden: true
+  ucd_relay_url:
+    type: string
+    description: 'The server URL for an agent relay - leave as ''None'' to enable agents to communicate with server directly.'
+  ucd_proxy_port:
+    type: string
+    description: 'The UCD proxy port, the default value is 20080'
+    default: '20080'
+  application_name:
+    type: string
+    description: 'Generated'
+  environment_name:
+    type: string
+    description: 'Generated'
+  ansible-playbooks_export:
+    type: string
+    description: 'Generated to access component from imported blueprint'
+parameter_groups:
+    - { label: 'Agent Parameters', parameters: [ansible-playbooks_export, application_name, environment_name, ucd_password, ucd_proxy_port, ucd_relay_url, ucd_server_url, ucd_user] }
+resources:
+## APPLICATION { "AppTeste" : { "baseResource" : "", "teamMappings" : "" } }
+  ansible-playbooks:
+    type: IBM::UrbanCode::SoftwareDeploy::UCD
+    properties:
+      apply_config: { get_resource: ansible-playbooks_sw_config }
+      server: { get_param: ansible-playbooks_export }
+      version: LATEST
+      agent_timeout: "360"
+
+  ansible-playbooks_sw_config:
+    type: IBM::UrbanCode::SoftwareConfig::UCD
+    properties: 
+      name: "ansible-playbooks"
+      component_process: "Run Process"
+      component_process_timeout: "300"
+      ucd_server_url: { get_param: ucd_server_url } # these should come from resource_tree
+      ucd_username: { get_param: ucd_user }
+      ucd_password: { get_param: ucd_password }
+      ucd_relay_url: { get_param: ucd_relay_url }
+      ucd_proxy_port: { get_param: ucd_proxy_port }
+      application: { get_param: application_name }
+      environment_name: { get_param: environment_name }
+
+
+outputs:
+  blueprint_url:
+    description: Blueprint Origin URL
+    value:  https://marcosbv-ubuntu-server:8445/landscaper/view/projects?open=ucdpadmin_00000000_0000_0000_0000_000000000002-OrionContent/Blueprints/Aplicacao1/Aplicacao1-componentes.yaml.yml
+
